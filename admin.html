@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SwingDesk AI Admin</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0b0f19;
+      color: white;
+      margin: 0;
+      padding: 15px;
+    }
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+    .box {
+      background: #131b2d;
+      border-radius: 14px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+    label {
+      font-size: 13px;
+      opacity: 0.8;
+      display: block;
+      margin-top: 10px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      margin-top: 6px;
+      background: #0e1527;
+      color: white;
+      box-sizing: border-box;
+    }
+    textarea { min-height: 80px; }
+    button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 15px;
+    }
+    button:active { transform: scale(0.98); }
+
+    .smallbtn {
+      background: #1e7f44;
+      margin-top: 8px;
+    }
+
+    .dangerbtn {
+      background: #a12c2c;
+      margin-top: 8px;
+    }
+
+    .msg {
+      margin-top: 10px;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .card {
+      background: #0e1527;
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin: 4px 0;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🛠️ SwingDesk AI Admin Panel</h1>
+
+<div class="box">
+  <h3>Add New Signal</h3>
+
+  <label>Stock</label>
+  <input id="stock" placeholder="Example: ITC" />
+
+  <label>Setup</label>
+  <input id="setup" placeholder="Example: Pullback + Support" />
+
+  <label>Buy Zone</label>
+  <input id="buyzone" placeholder="Example: 420-428" />
+
+  <label>Stop Loss</label>
+  <input id="sl" placeholder="Example: 409 (Closing)" />
+
+  <label>Target 1</label>
+  <input id="t1" placeholder="Example: 450" />
+
+  <label>Target 2</label>
+  <input id="t2" placeholder="Example: 470" />
+
+  <label>Holding</label>
+  <input id="holding" placeholder="Example: 10-25 Days" />
+
+  <label>Risk</label>
+  <select id="risk">
+    <option>Low</option>
+    <option selected>Medium</option>
+    <option>High</option>
+  </select>
+
+  <label>Status</label>
+  <select id="status">
+    <option selected>OPEN</option>
+    <option>PENDING</option>
+    <option>CLOSED</option>
+  </select>
+
+  <label>Note</label>
+  <textarea id="note" placeholder="Reason / sector strength / breakout details..."></textarea>
+
+  <button onclick="addSignal()">➕ Add Signal</button>
+
+  <div class="msg" id="msg"></div>
+</div>
+
+<div class="box">
+  <h3>Update Existing Signal</h3>
+
+  <label>Signal ID</label>
+  <input id="update_id" placeholder="Example: SIG-1712345678901" />
+
+  <label>New Status</label>
+  <select id="update_status">
+    <option>OPEN</option>
+    <option>PENDING</option>
+    <option selected>CLOSED</option>
+  </select>
+
+  <label>Update Note</label>
+  <textarea id="update_note" placeholder="Example: Target1 hit, booked 50%, SL shifted to entry"></textarea>
+
+  <button class="smallbtn" onclick="updateSignal()">✅ Update Signal</button>
+
+  <div class="msg" id="upmsg"></div>
+</div>
+
+<div class="box">
+  <h3>Latest Signals (For Copy ID)</h3>
+  <button onclick="loadSignals()">🔄 Load Signals</button>
+  <div id="list"></div>
+</div>
+
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbwjrm8hH6lcRDjRR5I8o8654k2LRcZH6FGWUFM2Ft9WYkT3OeAcoiT_fxi0GqRfjoMw/exec";
+
+  async function addSignal() {
+    const params = new URLSearchParams({
+      action: "add",
+      Stock: document.getElementById("stock").value,
+      Setup: document.getElementById("setup").value,
+      BuyZone: document.getElementById("buyzone").value,
+      StopLoss: document.getElementById("sl").value,
+      Target1: document.getElementById("t1").value,
+      Target2: document.getElementById("t2").value,
+      Holding: document.getElementById("holding").value,
+      Risk: document.getElementById("risk").value,
+      Status: document.getElementById("status").value,
+      Note: document.getElementById("note").value
+    });
+
+    document.getElementById("msg").innerText = "⏳ Adding...";
+
+    try {
+      const res = await fetch(API_URL + "?" + params.toString());
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById("msg").innerText = "✅ Added Successfully! ID: " + data.id;
+        loadSignals();
+      } else {
+        document.getElementById("msg").innerText = "❌ Failed: " + data.message;
+      }
+    } catch (err) {
+      document.getElementById("msg").innerText = "❌ Error connecting API.";
+    }
+  }
+
+  async function updateSignal() {
+    const params = new URLSearchParams({
+      action: "update",
+      ID: document.getElementById("update_id").value,
+      Status: document.getElementById("update_status").value,
+      Note: document.getElementById("update_note").value
+    });
+
+    document.getElementById("upmsg").innerText = "⏳ Updating...";
+
+    try {
+      const res = await fetch(API_URL + "?" + params.toString());
+      const data = await res.json();
+
+      if (data.success) {
+        document.getElementById("upmsg").innerText = "✅ Updated Successfully!";
+        loadSignals();
+      } else {
+        document.getElementById("upmsg").innerText = "❌ Failed: " + data.message;
+      }
+    } catch (err) {
+      document.getElementById("upmsg").innerText = "❌ Error connecting API.";
+    }
+  }
+
+  async function loadSignals() {
+    document.getElementById("list").innerHTML = "Loading...";
+
+    try {
+      const res = await fetch(API_URL + "?action=list");
+      const data = await res.json();
+
+      if (!data.success) throw new Error("API error");
+
+      const list = document.getElementById("list");
+      list.innerHTML = "";
+
+      data.signals.slice(0, 10).forEach(s => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <div class="row"><b>${s.Stock}</b> <span>${s.Status}</span></div>
+          <div class="row"><span>ID:</span><span>${s.ID}</span></div>
+          <div class="row"><span>Buy:</span><span>${s.BuyZone}</span></div>
+          <div class="row"><span>SL:</span><span>${s.StopLoss}</span></div>
+          <div class="row"><span>T1:</span><span>${s.Target1}</span></div>
+          <div class="row"><span>T2:</span><span>${s.Target2}</span></div>
+        `;
+        list.appendChild(div);
+      });
+
+    } catch (err) {
+      document.getElementById("list").innerHTML = "❌ Error loading signals.";
+    }
+  }
+</script>
+
+</body>
+</html>
