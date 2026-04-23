@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SwingDesk AI</title>
+  <title>SwingDesk AI Signals</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -95,8 +95,7 @@
   </div>
 
 <script>
-  // 🔥 Paste your Apps Script Web App URL here:
-  const API_URL = "PASTE_YOUR_WEBAPP_URL_HERE";
+  const API_URL = "https://script.google.com/macros/s/AKfycbwjrm8hH6lcRDjRR5I8o8654k2LRcZH6FGWUFM2Ft9WYkT3OeAcoiT_fxi0GqRfjoMw/exec";
 
   let allSignals = [];
 
@@ -113,7 +112,7 @@
 
     } catch (err) {
       document.getElementById("signals").innerHTML =
-        "❌ Error loading signals. Check API URL / Deployment permission.";
+        "❌ Error loading signals. Check API.";
     }
   }
 
