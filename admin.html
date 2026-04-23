@@ -83,9 +83,44 @@
       font-size: 13px;
       margin: 4px 0;
     }
+
+    .hidden {
+      display: none;
+    }
+
+    .pinbox {
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    .pinbox input {
+      text-align: center;
+      font-size: 20px;
+      letter-spacing: 5px;
+    }
+
+    .lockmsg {
+      margin-top: 12px;
+      font-size: 14px;
+      opacity: 0.85;
+    }
   </style>
 </head>
 <body>
+
+<!-- 🔐 PIN LOGIN SCREEN -->
+<div id="pinScreen" class="pinbox">
+  <h1>🔒 SwingDesk AI Admin</h1>
+  <p style="opacity:0.8;">Enter Admin PIN to Access</p>
+
+  <input id="pinInput" type="password" placeholder="****" />
+
+  <button onclick="unlock()">Unlock</button>
+  <div class="lockmsg" id="lockmsg"></div>
+</div>
+
+<!-- ✅ ADMIN PANEL CONTENT -->
+<div id="adminPanel" class="hidden">
 
 <h1>🛠️ SwingDesk AI Admin Panel</h1>
 
@@ -157,13 +192,46 @@
 </div>
 
 <div class="box">
-  <h3>Latest Signals (For Copy ID)</h3>
+  <h3>Latest Signals (Copy ID)</h3>
   <button onclick="loadSignals()">🔄 Load Signals</button>
+  <button class="dangerbtn" onclick="logout()">🔒 Logout</button>
   <div id="list"></div>
 </div>
 
+</div>
+
 <script>
+  // 🔥 API URL
   const API_URL = "https://script.google.com/macros/s/AKfycbwjrm8hH6lcRDjRR5I8o8654k2LRcZH6FGWUFM2Ft9WYkT3OeAcoiT_fxi0GqRfjoMw/exec";
+
+  // 🔥 CHANGE YOUR ADMIN PIN HERE
+  const ADMIN_PIN = "7777";  
+
+  // Unlock Function
+  function unlock() {
+    const pin = document.getElementById("pinInput").value;
+
+    if (pin === ADMIN_PIN) {
+      sessionStorage.setItem("adminUnlocked", "yes");
+      document.getElementById("pinScreen").style.display = "none";
+      document.getElementById("adminPanel").classList.remove("hidden");
+      loadSignals();
+    } else {
+      document.getElementById("lockmsg").innerText = "❌ Wrong PIN!";
+    }
+  }
+
+  // Auto unlock if already logged in
+  if (sessionStorage.getItem("adminUnlocked") === "yes") {
+    document.getElementById("pinScreen").style.display = "none";
+    document.getElementById("adminPanel").classList.remove("hidden");
+    loadSignals();
+  }
+
+  function logout() {
+    sessionStorage.removeItem("adminUnlocked");
+    location.reload();
+  }
 
   async function addSignal() {
     const params = new URLSearchParams({
@@ -234,7 +302,7 @@
       const list = document.getElementById("list");
       list.innerHTML = "";
 
-      data.signals.slice(0, 10).forEach(s => {
+      data.signals.slice(0, 15).forEach(s => {
         const div = document.createElement("div");
         div.className = "card";
         div.innerHTML = `
