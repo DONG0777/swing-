@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SwingDesk AI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0b0f19;
+      color: white;
+      margin: 0;
+      padding: 15px;
+    }
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+    .card {
+      background: #131b2d;
+      border-radius: 14px;
+      padding: 15px;
+      margin-bottom: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+    .stock {
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .setup {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-bottom: 10px;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+    .open { background: #1e7f44; }
+    .closed { background: #a12c2c; }
+    .pending { background: #a17c2c; }
+
+    .topbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 12px;
+      border: none;
+      outline: none;
+    }
+    button {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:active { transform: scale(0.98); }
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      opacity: 0.6;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📈 SwingDesk AI (Signals)</h1>
+
+  <div class="topbar">
+    <input type="text" id="search" placeholder="Search stock..." />
+    <button onclick="loadSignals()">Refresh</button>
+  </div>
+
+  <div id="signals"></div>
+
+  <div class="footer">
+    Educational purpose only. Follow SL strictly.
+  </div>
+
+<script>
+  // 🔥 Paste your Apps Script Web App URL here:
+  const API_URL = "PASTE_YOUR_WEBAPP_URL_HERE";
+
+  let allSignals = [];
+
+  async function loadSignals() {
+    document.getElementById("signals").innerHTML = "Loading...";
+    try {
+      const res = await fetch(API_URL + "?action=list");
+      const data = await res.json();
+
+      if (!data.success) throw new Error("API error");
+
+      allSignals = data.signals;
+      renderSignals(allSignals);
+
+    } catch (err) {
+      document.getElementById("signals").innerHTML =
+        "❌ Error loading signals. Check API URL / Deployment permission.";
+    }
+  }
+
+  function renderSignals(signals) {
+    const box = document.getElementById("signals");
+    box.innerHTML = "";
+
+    if (signals.length === 0) {
+      box.innerHTML = "No signals found.";
+      return;
+    }
+
+    signals.forEach(s => {
+      const statusClass =
+        s.Status === "OPEN" ? "open" :
+        s.Status === "CLOSED" ? "closed" : "pending";
+
+      const card = document.createElement("div");
+      card.className = "card";
+
+      card.innerHTML = `
+        <div class="stock">${s.Stock}</div>
+        <div class="setup">📌 ${s.Setup} | 🗓️ ${s.Date}</div>
+
+        <div class="row"><span>Buy Zone:</span><span>${s.BuyZone}</span></div>
+        <div class="row"><span>Stop Loss:</span><span>${s.StopLoss}</span></div>
+        <div class="row"><span>Target 1:</span><span>${s.Target1}</span></div>
+        <div class="row"><span>Target 2:</span><span>${s.Target2}</span></div>
+        <div class="row"><span>Holding:</span><span>${s.Holding}</span></div>
+        <div class="row"><span>Risk:</span><span>${s.Risk}</span></div>
+
+        <div class="tag ${statusClass}">${s.Status}</div>
+
+        <div style="margin-top:10px;font-size:13px;opacity:0.85;">
+          📝 ${s.Note || "No note"}
+        </div>
+      `;
+
+      box.appendChild(card);
+    });
+  }
+
+  document.getElementById("search").addEventListener("input", function() {
+    const q = this.value.toLowerCase();
+    const filtered = allSignals.filter(s =>
+      (s.Stock || "").toLowerCase().includes(q)
+    );
+    renderSignals(filtered);
+  });
+
+  loadSignals();
+</script>
+
+</body>
+</html>
